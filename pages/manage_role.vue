@@ -4,7 +4,7 @@
     <el-row>
       <el-col :span="18">
         <UiCard>
-          <div v-if="personnel">
+          <div v-if="personnel!">
             <el-table class="table" ref="singleTableRef" highlight-current-row @current-change="handleCurrentChange"
               :data="personnel" stripe style="width: 100%" @sort-change="handleSortChange">
               <el-table-column prop="email" sortable="custom" label="email" width="160" />
@@ -17,12 +17,13 @@
               <el-table-column prop="role" sortable="custom" label="Role" />
             </el-table>
             <div class="example-pagination-block">
-              <el-pagination layout="prev, pager, next" @current-change="page" :total="30" />
+              <el-pagination layout="prev, pager, next" @current-change="page" :page-size="pagData.pageSize"
+                :page-count="pagData.totalPages" />
             </div>
           </div>
         </UiCard>
         <div>
-          <el-input-number :min="2" :max="20" v-model="numItems" :step="2" />
+          <el-input-number :min="2" :max="20" v-model="numItems" @change="numItemsPage" :step="2" />
         </div>
       </el-col>
       <el-col :span="12">
@@ -77,24 +78,27 @@ const currentRow = ref()
 const string = ref('')
 let numItems = ref(2)
 let currPage = ref(1)
-let totItems = ref()
-let pagData = ref(paginate(1, 1, 1, 1))
-let totPages = ref(pagData.value.totalPages)
+let pagData = ref(paginate(1, 1, 1, 10))
+let totPages = ref(3)
+let totItems = ref(10)
+console.log()
 const singleTableRef = ref<InstanceType<typeof ElTable>>()
 
+async function numItemsPage(newVal: number | undefined, oldVal: number | undefined) {
+  numItems.value = newVal as number
+  page(1)
+}
 
 async function page(num: number) {
-  console.log("pagData.value.startIndex", pagData.value.startIndex, "pagData.value.endIndex", pagData.value.endIndex)
   currPage.value = num
   pagData.value = paginate(totItems.value as number, currPage.value, numItems.value, totPages.value)
-  const { data } = await client
+  const { data, count } = await client
     .from('personnel')
-    .select(`id, email, username, role`).range(pagData.value.startIndex || 0, pagData.value.endIndex || 100)
-  console.log("before", "pagData.value.currentPage", pagData.value.currentPage, "pagData.value.startIndex", pagData.value.startIndex, "pagData.value.endIndex", pagData.value.endIndex)
-  console.log("after", "pagData.value.currentPage", pagData.value.currentPage, "pagData.value.startIndex", pagData.value.startIndex, "pagData.value.endIndex", pagData.value.endIndex)
-
+    .select(`id, email, username, role`, { count: "estimated" }).range(pagData.value.startIndex || 0, pagData.value.endIndex || 100)
+  totItems.value = count as number
   personnel.value = data;
 }
+
 
 const handleCurrentChange = (val: Personnel | null) => {
   currentRow.value = val
@@ -110,11 +114,12 @@ const { data: personnel, refresh: refreshPersonnel } =
       .from('personnel')
       .select(`id, email, username, role`, { count: 'estimated' })
       .range(0, numItems.value - 1)
-    totItems.value = count
+    totItems.value = count as number
+    pagData.value = paginate(totItems.value, 1, 2, 10)
     return data
   })
 
-pagData.value = paginate(totItems.value as number, currPage.value, numItems.value, 10)
+
 // console.log(user.value?.email)
 const onSubmit = async (data: Personnel) => {
   await client.from('personnel').update({ role: data.role }).match({ id: data.id })
@@ -124,7 +129,7 @@ const onSubmit = async (data: Personnel) => {
 async function handleSortChange({ column, prop, order }: { column: object, prop: any, order: string | boolean }) {
   if (order === "descending") order = false
   else order = true
-  const { data } = await client.from('personnel').select(`id,email, username, role`).order(prop, { ascending: order })
+  const { data } = await client.from('personnel').select(`id,email, username, role`).range(pagData.value.startIndex || 0, pagData.value.endIndex || 100).order(prop, { ascending: order })
   personnel.value = data;
 }
 
