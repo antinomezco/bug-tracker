@@ -4,21 +4,27 @@
     <el-row>
       <el-col :span="18">
         <UiCard>
-          <div v-if="personnel!">
-            <el-table class="table" ref="singleTableRef" highlight-current-row @current-change="handleCurrentChange"
-              :data="personnel" stripe style="width: 100%" @sort-change="handleSortChange">
-              <el-table-column prop="email" sortable="custom" label="email" width="160" />
-              <el-table-column prop="username" sortable="custom" label="Username" width="180">
-                <!-- <template #header>
-                <el-input v-model="search" size="small" placeholder="Type to search" />
-                </template> -->
-
-              </el-table-column>
-              <el-table-column prop="role" sortable="custom" label="Role" />
-            </el-table>
-            <div class="example-pagination-block">
-              <el-pagination layout="prev, pager, next" @current-change="page" :page-size="pagData.pageSize"
-                :page-count="pagData.totalPages" />
+          <h2>Your Personnel</h2>
+          <p>All the users in your database</p>
+          <div>
+            <div style="display: flex;">
+              <el-input v-model="searchTerm" placeholder="Search" />
+              <el-select v-model="searchBy" class="m-2" placeholder="Select" size="large">
+                <el-option v-for="item in searchList" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+              <el-button type="primary" @click="onSearch(searchTerm)">Search</el-button>
+            </div>
+            <div v-if="personnel!">
+              <el-table class="table" ref="singleTableRef" highlight-current-row @current-change="handleCurrentChange"
+                :data="personnel" stripe style="width: 100%" @sort-change="handleSortChange">
+                <el-table-column prop="email" sortable="custom" label="email" width="160" />
+                <el-table-column prop="username" sortable="custom" label="Username" width="180" />
+                <el-table-column prop="role" sortable="custom" label="Role" />
+              </el-table>
+              <div class="example-pagination-block">
+                <el-pagination layout="prev, pager, next" @current-change="page" :page-size="pagData.pageSize"
+                  :page-count="pagData.totalPages" />
+              </div>
             </div>
           </div>
         </UiCard>
@@ -26,13 +32,13 @@
           <el-input-number :min="2" :max="20" v-model="numItems" @change="numItemsPage" :step="2" />
         </div>
       </el-col>
-      <el-col :span="12">
+      <el-col :span="12" v-if="currentRow">
         <el-form :model="form" label-width="120px">
           <el-form-item label="User name">
-            <el-input v-model="form.username" />
+            <el-input disabled v-model="form.username" />
           </el-form-item>
           <el-form-item label="Email">
-            <el-input v-model="form.email" />
+            <el-input disabled v-model="form.email" />
           </el-form-item>
           <el-form-item label="Role">
             <el-select v-model="form.role" placeholder="User role">
@@ -75,11 +81,25 @@ const form = reactive({
 })
 
 const currentRow = ref()
-const string = ref('')
+const searchTerm = ref('')
 let numItems = ref(2)
 let currPage = ref(1)
 let pagData = ref(paginate(1, 1, 1, 10))
 let totPages = ref(3)
+let searchBy = ref("")
+let searchList = ref([{
+  value: 'email',
+  label: 'Email',
+},
+{
+
+  value: 'username',
+  label: 'User Name',
+},
+{
+  value: 'role',
+  label: 'Role',
+}])
 let totItems = ref(10)
 console.log()
 const singleTableRef = ref<InstanceType<typeof ElTable>>()
@@ -98,7 +118,6 @@ async function page(num: number) {
   totItems.value = count as number
   personnel.value = data;
 }
-
 
 const handleCurrentChange = (val: Personnel | null) => {
   currentRow.value = val
@@ -119,17 +138,34 @@ const { data: personnel, refresh: refreshPersonnel } =
     return data
   })
 
-
-// console.log(user.value?.email)
 const onSubmit = async (data: Personnel) => {
   await client.from('personnel').update({ role: data.role }).match({ id: data.id })
   handleCurrentChange(data)
 }
 
+const onSearch = async (searchTerm: string) => {
+  if (!searchTerm) {
+    page(1)
+  }
+
+  const { data } = await client.from('personnel')
+    .select(`id,email, username, role`)
+    // .range(pagData.value.startIndex || 0, pagData.value.endIndex || 100)
+    // .ilike(searchBy.value, `%${searchTerm}%`)
+    .textSearch(searchBy.value, searchTerm, {
+      type: 'websearch',
+      config: 'english'
+    })
+  personnel.value = data;
+}
+
 async function handleSortChange({ column, prop, order }: { column: object, prop: any, order: string | boolean }) {
   if (order === "descending") order = false
   else order = true
-  const { data } = await client.from('personnel').select(`id,email, username, role`).range(pagData.value.startIndex || 0, pagData.value.endIndex || 100).order(prop, { ascending: order })
+  const { data } = await client.from('personnel')
+    .select(`id,email, username, role`)
+    .range(pagData.value.startIndex || 0, pagData.value.endIndex || 100)
+    .order(prop, { ascending: order })
   personnel.value = data;
 }
 
