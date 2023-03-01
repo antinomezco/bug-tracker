@@ -94,7 +94,6 @@ const handleCurrentChange = (val: Personnel | null) => {
   form.role = currentRow.value?.role
 }
 
-// tomar datos de form y modificar la base de datos
 const onSubmit = async (data: Personnel) => {
   await client.from('personnel').update({ role: data.role }).match({ id: data.id })
   handleCurrentChange(data)

@@ -10,8 +10,21 @@
     <div v-if="supaQuery!">
       <el-table class="table" ref="singleTableRef" @current-change="handleCurrentChange" table-layout="auto"
         highlight-current-row :data="supaQuery" stripe style="width: 100%" @sort-change="handleSortChange">
-        <el-table-column v-for="header in headers" :key="header.value" :prop="header.value" sortable="custom"
-          :label="header.label" />
+        <el-table-column type="expand">
+          <template #default="props">
+            <div m="4">
+              <nuxt-link target="_blank" :to="`/project/${props.row.id}`">Project Details</nuxt-link>
+            </div>
+          </template>
+        </el-table-column>
+        <template v-for="header in headers" :key="header.value">
+          <el-table-column :prop="header.value" sortable="custom" :label="header.label" />
+          <!-- <el-table-column v-if="header.value === 'links'">
+            <template #default="props">
+              {{ props.row.links }}
+            </template>
+          </el-table-column> -->
+        </template>
       </el-table>
       <div class="example-pagination-block">
         <el-pagination layout="prev, pager, next" @current-change="page" :page-size="pagData.pageSize"
@@ -48,13 +61,14 @@ const client = useSupabaseClient<Database>()
 
 const { queryTable } = toRefs(props);
 const { queryColumn } = toRefs(props);
+const { headers } = toRefs(props)
 
 const searchTerm = ref('')
 let numItems = ref(10)
 let currPage = ref(1)
 let pagData = ref(paginate(1, 1, 1, 10))
 let totPages = ref(3)
-let searchBy = ref("email")
+let searchBy = ref("")
 let totItems = ref(10)
 const singleTableRef = ref<InstanceType<typeof ElTable>>()
 
@@ -131,9 +145,5 @@ onUnmounted(() => {
 })
 </script>
 
-<style>
-.table {
-  cursor: pointer;
-}
-</style>
+
 

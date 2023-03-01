@@ -1,12 +1,9 @@
 <template>
   <div>
-    manage project users page
+    manage projects
   </div>
 </template>
 
-<script setup lang="ts">
-definePageMeta({
-  middleware: 'auth'
-})
-</script>
+<script>
 
+</script>

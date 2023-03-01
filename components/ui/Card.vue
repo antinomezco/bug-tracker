@@ -25,6 +25,6 @@
 }
 
 .box-card {
-  width: 480px;
+  max-width: 80%;
 }
 </style>
