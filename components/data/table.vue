@@ -10,7 +10,7 @@
     <div v-if="supaQuery!">
       <el-table class="table" ref="singleTableRef" @current-change="handleCurrentChange" table-layout="auto"
         highlight-current-row :data="supaQuery" stripe style="width: 100%" @sort-change="handleSortChange">
-        <el-table-column type="expand">
+        <el-table-column type="expand" v-if="expand">
           <template #default="props">
             <div m="4">
               <nuxt-link target="_blank" :to="`/project/${props.row.id}`">Project Details</nuxt-link>
@@ -19,11 +19,6 @@
         </el-table-column>
         <template v-for="header in headers" :key="header.value">
           <el-table-column :prop="header.value" sortable="custom" :label="header.label" />
-          <!-- <el-table-column v-if="header.value === 'links'">
-            <template #default="props">
-              {{ props.row.links }}
-            </template>
-          </el-table-column> -->
         </template>
       </el-table>
       <div class="example-pagination-block">
@@ -51,6 +46,22 @@ const props = defineProps({
   headers: Array<keyable>,
   queryTable: String,
   queryColumn: String,
+  expand: {
+    type: Boolean,
+    default: false
+  },
+  equalToColumn: {
+    type: String,
+    default: ""
+  },
+  equalToDataEl: {
+    type: String,
+    default: ""
+  },
+  foreignTable: {
+    type: String,
+    default: ""
+  }
 })
 const emit = defineEmits(['lineGrabber'])
 
@@ -62,6 +73,9 @@ const client = useSupabaseClient<Database>()
 const { queryTable } = toRefs(props);
 const { queryColumn } = toRefs(props);
 const { headers } = toRefs(props)
+const { equalToColumn } = toRefs(props)
+const { equalToDataEl } = toRefs(props)
+const { foreignTable } = toRefs(props)
 
 const searchTerm = ref('')
 let numItems = ref(10)
@@ -72,8 +86,26 @@ let searchBy = ref("")
 let totItems = ref(10)
 const singleTableRef = ref<InstanceType<typeof ElTable>>()
 
+let foreignTableString = foreignTable!.value as string
+let equalToDataElString = equalToDataEl!.value as string
+let equalToColumnString = equalToColumn!.value as string;
 let queryTableString = queryTable!.value as string
 let queryColumnString = queryColumn!.value as string
+console.log(foreignTableString, equalToDataElString, equalToColumnString, queryTableString, queryColumnString)
+
+
+const { data: supaQuery, refresh: refreshQuery } =
+  await useAsyncData(queryTableString, async () => {
+    const { data, count } = await client
+      .from(queryTableString)
+      .select(queryColumnString, { count: 'estimated' })
+      .eq(equalToColumnString, equalToDataElString)
+      .range(0, numItems.value - 1)
+    totItems.value = count as number
+    pagData.value = paginate(totItems.value, 1, 10, 10)
+    console.log(data)
+    return data
+  })
 
 async function numItemsPage(newVal: number | undefined, oldVal: number | undefined) {
   numItems.value = newVal as number
@@ -82,34 +114,31 @@ async function numItemsPage(newVal: number | undefined, oldVal: number | undefin
 
 async function page(num: number) {
   currPage.value = num
-  pagData.value = paginate(totItems.value as number, currPage.value, numItems.value, totPages.value)
+  pagData.value = paginate(
+    totItems.value as number,
+    currPage.value,
+    numItems.value,
+    totPages.value
+  )
   const { data, count } = await client
     .from(queryTableString)
-    .select(queryColumnString, { count: "estimated" }).range(pagData.value.startIndex || 0, pagData.value.endIndex || 100)
+    .select(queryColumnString, { count: "estimated" })
+    .eq(equalToColumnString, equalToDataElString)
+    .ilike(searchBy.value, `%${searchTerm}%`)
+    .range(pagData.value.startIndex || 0, pagData.value.endIndex || 100)
   totItems.value = count as number
   supaQuery.value = data;
 }
-
-const { data: supaQuery, refresh: refreshQuery } =
-  await useAsyncData(queryTableString, async () => {
-    const { data, count } = await client
-      .from(queryTableString)
-      .select(queryColumnString, { count: 'estimated' })
-      .range(0, numItems.value - 1)
-    totItems.value = count as number
-    pagData.value = paginate(totItems.value, 1, 10, 10)
-    return data
-  })
 
 const onSearch = async (searchTerm: string) => {
   if (!searchTerm) {
     page(1)
     return
   }
-
   const { data } = await client.from(queryTableString)
     .select(queryColumnString)
     .ilike(searchBy.value, `%${searchTerm}%`)
+    .eq(equalToColumnString, equalToDataElString)
   supaQuery.value = data;
   pagData = ref(paginate(1, 1, 1, 10))
 }
@@ -117,14 +146,17 @@ const onSearch = async (searchTerm: string) => {
 async function handleSortChange({ column, prop, order }: { column: object, prop: any, order: string | boolean }) {
   if (order === "descending") order = false
   else order = true
+  console.log("foreignTable", foreignTable.value)
+  console.log("prop", prop)
   const { data } = await client.from(queryTableString)
     .select(queryColumnString)
     .range(pagData.value.startIndex || 0, pagData.value.endIndex || 100)
-    .order(prop, { ascending: order })
+    .eq(equalToColumnString, equalToDataElString)
+    .order("personnel", { foreignTable: foreignTableString, ascending: order })
   supaQuery.value = data;
 }
 
-const handleCurrentChange = (val: Personnel | null) => {
+const handleCurrentChange = <Type>(val: Type) => {
   emit('lineGrabber', val)
 }
 

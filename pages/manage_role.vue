@@ -86,7 +86,7 @@ const headers = ref([{
   label: 'Role',
 }])
 
-const handleCurrentChange = (val: Personnel | null) => {
+const handleCurrentChange = <Type>(val: Type): void => {
   currentRow.value = val
   form.id = currentRow.value?.id
   form.email = currentRow.value?.email
@@ -94,7 +94,8 @@ const handleCurrentChange = (val: Personnel | null) => {
   form.role = currentRow.value?.role
 }
 
-const onSubmit = async (data: Personnel) => {
+// MAKE GENERIC LIKE ABOVE
+const onSubmit = async (data: Personnel): Promise<void> => {
   await client.from('personnel').update({ role: data.role }).match({ id: data.id })
   handleCurrentChange(data)
 }

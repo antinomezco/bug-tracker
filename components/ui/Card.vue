@@ -1,11 +1,9 @@
 <template>
   <el-card class="box-card">
-    <template #header>
-      <div class="card-header">
-        <span>Card name</span>
-      </div>
-      <slot></slot>
-    </template>
+    <div class="card-header">
+      <span></span>
+    </div>
+    <slot></slot>
   </el-card>
 </template>
 

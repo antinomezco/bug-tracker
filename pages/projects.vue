@@ -10,7 +10,8 @@
           <h2>Your Personnel</h2>
           <p>All the users in your database</p>
           <div>
-            <data-table :searchList="searchList" :headers="headers" :queryTable=queryTable :queryColumn=queryColumn />
+            <data-table expand :searchList="searchList" :headers="headers" :queryTable=queryTable
+              :queryColumn=queryColumn />
           </div>
         </UiCard>
       </el-col>
