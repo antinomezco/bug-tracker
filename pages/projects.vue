@@ -10,8 +10,8 @@
           <h2>Your Personnel</h2>
           <p>All the users in your database</p>
           <div>
-            <data-table expand :searchList="searchList" :headers="headers" :queryTable=queryTable
-              :queryColumn=queryColumn />
+            <data-table expand :searchList=searchList :headers=headers :queryTable=queryTable :queryColumn=queryColumn
+              :linkTo=linkTo expandType="project" />
           </div>
         </UiCard>
       </el-col>
@@ -24,6 +24,7 @@ definePageMeta({
   middleware: 'auth'
 })
 
+const linkTo = ref("/project/")
 const queryTable = ref("project")
 const queryColumn = ref("id, name, desc")
 const searchList = ref([{

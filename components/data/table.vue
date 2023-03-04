@@ -13,7 +13,13 @@
         <el-table-column type="expand" v-if="expand">
           <template #default="props">
             <div m="4">
-              <nuxt-link target="_blank" :to="`/project/${props.row.id}`">Project Details</nuxt-link>
+              <nuxt-link target="_blank" v-if="expandType === 'project'" :to="`${linkTo}${props.row.id}`">
+                Project Details
+              </nuxt-link>
+              <nuxt-link target="_blank" v-if="expandType === 'project_details'" :to="`${linkTo}${props.row.tid.id}`">
+                Project Details
+              </nuxt-link>
+
             </div>
           </template>
         </el-table-column>
@@ -61,7 +67,9 @@ const props = defineProps({
   foreignTable: {
     type: String,
     default: ""
-  }
+  },
+  linkTo: String,
+  expandType: String
 })
 const emit = defineEmits(['lineGrabber'])
 
@@ -76,6 +84,7 @@ const { headers } = toRefs(props)
 const { equalToColumn } = toRefs(props)
 const { equalToDataEl } = toRefs(props)
 const { foreignTable } = toRefs(props)
+const { expandType } = toRefs(props)
 
 const searchTerm = ref('')
 let numItems = ref(10)
