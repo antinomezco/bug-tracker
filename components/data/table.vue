@@ -129,6 +129,7 @@ async function page(num: number) {
     numItems.value,
     totPages.value
   )
+
   const { data, count } = await client
     .from(queryTableString)
     .select(queryColumnString, { count: "estimated" })
