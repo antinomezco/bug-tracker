@@ -14,6 +14,22 @@
           <p>Project Description</p>
           <p>{{ currentTicket[0].ticket_desc }}</p>
         </div>
+        <div>
+          <p>Assigned Developer</p>
+          <p>{{ currentTicket[0].dev.name }}</p>
+        </div>
+        <div>
+          <p>Priority</p>
+          <p>{{ currentTicket[0].priority }}</p>
+        </div>
+        <div>
+          <p>Status</p>
+          <p>{{ currentTicket[0].current_status }}</p>
+        </div>
+        <div>
+          <p>Type</p>
+          <p>{{ currentTicket[0].type }}</p>
+        </div>
       </div>
     </ui-card>
     <ui-card>
@@ -39,7 +55,7 @@ const route = useRoute()
 
 const queryIdSingle = ref(route.params.id as string)
 const queryTableSingle = ref("tickets")
-const queryColumnSingle = ref("ticket_title, ticket_desc, submitter")
+const queryColumnSingle = ref("ticket_title, ticket_desc, submitter, dev:assigned_dev(name), priority, current_status, type")
 const currentTicket = ref()
 
 const dataQuery = async <T>(info: T) => {
@@ -48,7 +64,7 @@ const dataQuery = async <T>(info: T) => {
 
 // const foreignTableTicketHistory = ref("TicketHistory")
 const queryTableTicketHistory = ref("ticket_com_join")
-const queryColumnTicketHistory = ref("comment_id, ticket_id, com:commenter_id(username), mes:comment_id(message), date:comment_id(created_at)")
+const queryColumnTicketHistory = ref("comment_id, ticket_id, com:commenter_id(name), mes:comment_id(message), date:comment_id(created_at)")
 const searchListTicketHistory = ref([{
   value: 'history_id',
   label: 'history id',
@@ -64,7 +80,7 @@ const searchListTicketHistory = ref([{
 }
 ])
 const headersPersonnel = ref([{
-  value: 'com.username',
+  value: 'com.name',
   label: 'Commenter',
 },
 {

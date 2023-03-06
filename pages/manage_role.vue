@@ -58,14 +58,14 @@ const form = reactive({
 
 const currentRow = ref()
 const queryTable = ref("personnel")
-const queryColumn = ref("id, email, username, role")
+const queryColumn = ref("id, email, name, role")
 const searchList = ref([{
   value: 'email',
   label: 'Email',
 },
 {
 
-  value: 'username',
+  value: 'name',
   label: 'User Name',
 },
 {
@@ -78,7 +78,7 @@ const headers = ref([{
 },
 {
 
-  value: 'username',
+  value: 'name',
   label: 'User Name',
 },
 {
@@ -90,7 +90,7 @@ const handleCurrentChange = <Type>(val: Type): void => {
   currentRow.value = val
   form.id = currentRow.value?.id
   form.email = currentRow.value?.email
-  form.username = currentRow.value?.username
+  form.username = currentRow.value?.name
   form.role = currentRow.value?.role
 }
 

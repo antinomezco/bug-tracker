@@ -3,5 +3,5 @@ declare interface Personnel {
   email?: string;
   id: string;
   role?: string | null;
-  username?: string;
+  user?: string;
 }

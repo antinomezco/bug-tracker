@@ -48,9 +48,9 @@ const queryColumnSingle = ref("id, name, desc")
 // currently unable to sort until supabase supports many-to-many relationship sorting/searching as indicated in https://supabase.com/blog/postgrest-11-prerelease#order-by-related-tables
 const foreignTablePersonnel = ref("personnel")
 const queryTablePersonnel = ref("project_details")
-const queryColumnPersonnel = ref("project_id, name:personnel_id (username), email:personnel_id (email), role:personnel_id (role) ")
+const queryColumnPersonnel = ref("project_id, name:personnel_id (name), email:personnel_id (email), role:personnel_id (role) ")
 const searchListPersonnel = ref([{
-  value: 'name.username',
+  value: 'name.name',
   label: 'Email',
 },
 {
@@ -63,7 +63,7 @@ const searchListPersonnel = ref([{
   label: 'Role',
 }])
 const headersPersonnel = ref([{
-  value: 'name.username',
+  value: 'name.name',
   label: 'User Name',
 },
 {
@@ -78,7 +78,7 @@ const headersPersonnel = ref([{
 
 
 const queryTableTicket = ref("project_details")
-const queryColumnTicket = ref("tid:ticket_id(id),ttitle:ticket_id(ticket_title),sub:submitter_id(username) , dev:personnel_id(username), tstatus:ticket_id(current_status), tcreated:ticket_id(created_at)")
+const queryColumnTicket = ref("tid:ticket_id(id),ttitle:ticket_id(ticket_title),sub:submitter_id(name) , dev:personnel_id(name), tstatus:ticket_id(current_status), tcreated:ticket_id(created_at)")
 const searchListTicket = ref([{
   value: 'ttitle.ticket_title',
   label: 'Ticket',
@@ -99,11 +99,11 @@ const headersTicket = ref([{
 },
 {
 
-  value: 'sub.username',
+  value: 'sub.name',
   label: 'Submitter',
 },
 {
-  value: 'dev.username',
+  value: 'dev.name',
   label: 'Developer',
 },
 {
