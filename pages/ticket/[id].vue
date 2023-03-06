@@ -35,6 +35,17 @@
     <ui-card>
       <data-table :searchList="searchListTicketHistory" :headers="headersPersonnel" :queryTable=queryTableTicketHistory
         :queryColumn=queryColumnTicketHistory :equalToDataEl=queryIdSingle equalToColumn="ticket_id" />
+      <el-col :span="12">
+        <el-form :model="form" label-width="120px">
+          <el-form-item label="message">
+            <el-input v-model="form.message" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="onSubmit(form)">Add message</el-button>
+            <!-- <el-button type="danger">Delete User</el-button> -->
+          </el-form-item>
+        </el-form>
+      </el-col>
     </ui-card>
     <!-- <ui-card>
       <data-table :searchList="searchListTicket" :headers="headersTicket" :queryTable=queryTableTicket
@@ -48,6 +59,15 @@
 </template>
 
 <script setup lang="ts">
+import { Database } from '~/types/supabase'
+import { v4 as uuidv4 } from 'uuid'
+definePageMeta({
+  middleware: 'auth'
+})
+
+const user = useSupabaseUser()
+console.log(user.value?.id)
+const client = useSupabaseClient<Database>()
 definePageMeta({
   middleware: 'auth'
 })
@@ -57,10 +77,25 @@ const queryIdSingle = ref(route.params.id as string)
 const queryTableSingle = ref("tickets")
 const queryColumnSingle = ref("ticket_title, ticket_desc, submitter, dev:assigned_dev(name), priority, current_status, type")
 const currentTicket = ref()
+const storeId = ref(uuidv4())
 
 const dataQuery = async <T>(info: T) => {
   currentTicket.value = await info
 }
+
+const form = reactive({
+  id: storeId,
+  message: ""
+})
+
+const onSubmit = async (data: Personnel): Promise<void> => {
+  console.log(form, user.value?.id)
+  await client.from('ticket_comments').insert({ message: form.message, commenter: user.value!.id, id: form.id })
+  await client.from('ticket_com_join').insert({ comment_id: form.id, ticket_id: queryIdSingle.value, commenter_id: user.value?.id })
+  console.log(form, user.value?.id)
+  form.message = ""
+}
+
 
 // const foreignTableTicketHistory = ref("TicketHistory")
 const queryTableTicketHistory = ref("ticket_com_join")

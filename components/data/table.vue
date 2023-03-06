@@ -19,7 +19,6 @@
               <nuxt-link target="_blank" v-if="expandType === 'project_details'" :to="`${linkTo}${props.row.tid.id}`">
                 Project Details
               </nuxt-link>
-
             </div>
           </template>
         </el-table-column>
