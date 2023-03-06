@@ -2,15 +2,14 @@
   <div>
     <p>current {{ queryTable }}: {{ defSelectname }}</p>
     <el-form-item :label=capitalize(queryTable!)>
-      <el-select v-model="chosenSelect" @change="selectedOption(chosenSelect)">
+      <el-select v-model="chosenSelect" v-if="recursiveObj" @change="selectedOption(chosenSelect)">
+        <el-option v-for="(query, index) of supaQuery" :label=query.name.name :value=query.id.id />
+      </el-select>
+      <el-select v-model="chosenSelect" v-else @change="selectedOption(chosenSelect)">
         <el-option v-for="(query, index) of supaQuery" :label=query.name :value=query.id />
-        <!-- {{ supaQuery![index].name }} -->
       </el-select>
     </el-form-item>
-    <!-- add select component for edit ticket page
-    
-      
-      list projects from the project table and updating the project_details table with that project number
+    <!--      
       assigned dev needs a relation between project_details(personnel_id) equaling those devs assigned to the project chosen and updating the data in project_details(personnel_id)
     -->
   </div>
@@ -34,8 +33,8 @@ const props = defineProps({
   defSelectname: {
     type: String,
     default: ""
-  }
-  // queryId: String
+  },
+  recursiveObj: Boolean
 })
 const emit = defineEmits(['optionGrabber'])
 const client = useSupabaseClient<Database>()
@@ -61,6 +60,7 @@ const { data: supaQuery, refresh: refreshQuery } =
       .from(queryTableString)
       .select(queryColumnString, { count: 'estimated' })
       .eq(equalToColumnString, equalToDataElString)
+    console.log(`convertir? ${queryTableString}`, data)
     return data
   })
 

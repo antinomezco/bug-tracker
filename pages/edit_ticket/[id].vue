@@ -23,11 +23,14 @@
         <data-select-data queryTable="project" queryColumn="id, name" :defSelectname=form.project_name
           :defSelectNum=form.project_id @option-grabber="formFillerProject"></data-select-data>
 
-
-        <data-select-data queryTable="personnel" queryColumn="id, username, role"
-          :defSelectname=form.assigned_developer_name :defSelectNum=form.assigned_developer
+        <data-select-data queryTable="personnel" queryColumn="id, name, role" :defSelectname=form.assigned_developer_name
+          equalToColumn="role" equalToDataEl="Developer" :defSelectNum=form.assigned_developer
           @option-grabber="formFillerDev"></data-select-data>
 
+        <!-- <data-select-data queryTable="project_details"
+          queryColumn="id:personnel_id(id), name:personnel_id(name), role:personnel_id(role)"
+          :defSelectname=form.assigned_developer_name :defSelectNum=form.assigned_developer
+          @option-grabber="formFillerDev" recursiveObj></data-select-data> -->
 
         <el-form-item label="Status">
           <el-select v-model="form.status">
@@ -49,7 +52,7 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="onSubmit(form)">Apply</el-button>
-          <el-button type="danger">Delete User</el-button>
+          <el-button type="danger" @click="onCancel">Cancel</el-button>
         </el-form-item>
       </el-form>
     </ui-card>
@@ -69,7 +72,7 @@ const client = useSupabaseClient<Database>()
 const currentRow = ref()
 const queryIdSingle = ref(route.params.id as string)
 const queryTableSingle = ref("tickets")
-const queryColumnSingle = ref("id ,ticket_title, ticket_desc, assigned_dev, submitter, priority, current_status, type, project_id, pname:project_id(name), devname:assigned_dev(username)")
+const queryColumnSingle = ref("id ,ticket_title, ticket_desc, assigned_dev, submitter, priority, current_status, type, project_id, pname:project_id(name), devname:assigned_dev(name)")
 const currentTicket = ref()
 
 const dataQuery = async <T>(info: any) => {
@@ -100,7 +103,7 @@ const formFiller = <Type>(val: Type): void => {
   form.submitter = currentRow.value.submitter
   form.priority = currentRow.value?.priority
   form.assigned_developer = currentRow.value?.assigned_dev
-  form.assigned_developer_name = currentRow.value?.devname.username
+  form.assigned_developer_name = currentRow.value?.devname.name
   form.status = currentRow.value?.current_status
   form.type = currentRow.value?.type
   form.project_name = currentRow.value?.pname.name
@@ -116,10 +119,21 @@ const formFillerDev = (val: string): void => {
   form.assigned_developer = val
 }
 
+const backToTicket = async () => {
+  await navigateTo(`/ticket/${form.id}`)
+
+}
+
 // MAKE GENERIC LIKE ABOVE
-const onSubmit = async (data: any): Promise<void> => {
-  console.log(form)
-  // await client.from('personnel').update({ role: data.role }).match({ id: data.id })
+const onSubmit = async (form: any): Promise<void> => {
+  console.log("SUBMIT", form)
+  await client.from('project_details').update({ personnel_id: form.assigned_developer, project_id: form.project_id }).match({ id: form.id })
+  await client.from('tickets').update({ ticket_title: form.title, ticket_desc: form.desc, priority: form.priority, current_status: form.status, type: form.type }).match({ id: form.id })
   // redirect to ticket page
+  backToTicket()
+}
+
+const onCancel = async () => {
+  backToTicket()
 }
 </script>
